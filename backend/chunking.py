@@ -5,8 +5,8 @@ This module handles reading documents and splitting them into chunks
 for storage and search.
 """
 
-import os
-from typing import List
+import os # Imports Python's operating system module for file operations
+from typing import List # Imports the List type hint
 
 
 def read_text_file(file_path: str) -> str:
@@ -23,13 +23,13 @@ def read_text_file(file_path: str) -> str:
         FileNotFoundError: If file doesn't exist
         UnicodeDecodeError: If file encoding is not UTF-8
     """
-    if not os.path.exists(file_path):
+    if not os.path.exists(file_path): # Check if file exists
         raise FileNotFoundError(f"File not found: {file_path}")
     
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
+    with open(file_path, 'r', encoding='utf-8') as f: # encoding='utf-8' specifies how to decode bytes into text
+        content = f.read() # Read entire file into a string variable
     
-    return content
+    return content # Return the file content
 
 
 def read_pdf_file(file_path: str) -> str:
@@ -49,21 +49,22 @@ def read_pdf_file(file_path: str) -> str:
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
     
-    try:
+    try: # always validate before trying to open!
         import PyPDF2
-    except ImportError:
-        raise ImportError(
-            "PyPDF2 is required for PDF processing. "
+    except ImportError: # Try to import the PyPDF2 library
+        raise ImportError(  # If import fails, catch that specific error
+            "PyPDF2 is required for PDF processing. "  
             "Install it with: pip install PyPDF2"
         )
     
     content = ""
-    with open(file_path, 'rb') as f:
-        pdf_reader = PyPDF2.PdfReader(f)
+    with open(file_path, 'rb') as f: # 'rb' means read in binary mode, PDFs aren't plain text - they're binary files with special encoding
+        pdf_reader = PyPDF2.PdfReader(f) # Create a PDF reader object that can parse the PDF structure, the PyPDF2 library handles all the complexity of PDF format
         for page in pdf_reader.pages:
-            content += page.extract_text()
+            content += page.extract_text() # page.extract_text() gets text from one page
+
     
-    return content
+    return content # Return the full extracted text
 
 
 def read_document(file_path: str) -> str:
@@ -82,7 +83,7 @@ def read_document(file_path: str) -> str:
         ValueError: If file type is not supported
         FileNotFoundError: If file doesn't exist
     """
-    file_ext = os.path.splitext(file_path)[1].lower()
+    file_ext = os.path.splitext(file_path)[1].lower() # Splits filename and extension and get the extension in lowercase
     
     if file_ext in ['.txt', '.md']:
         return read_text_file(file_path)
@@ -117,35 +118,36 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]
         return []
     
     # Clean up text: remove excessive whitespace
-    text = ' '.join(text.split())
+    text = ' '.join(text.split()) # split by whitespace and join them back together with single space
     
     chunks = []
-    start = 0
+    start: int = 0
     text_length = len(text)
     
     while start < text_length:
         # Calculate end position
-        end = start + chunk_size
+        end: int = start + chunk_size
         
         # If this is not the last chunk and we're in the middle of a word,
-        # try to break at a space
+        # try to adjust the end to the last space
         if end < text_length:
             # Look for the last space within the chunk
-            space_pos = text.rfind(' ', start, end)
-            if space_pos > start:  # Found a space
-                end = space_pos
+            last_space = text.rfind(' ', start, end) # rfind means "reverse find" (searches backwards)
+            if last_space > start:  # confirms it's a valid position
+                end = last_space
         
-        # Extract chunk
-        chunk = text[start:end].strip()
-        if chunk:  # Only add non-empty chunks
-            chunks.append(chunk)
+        # Extract each chunk
+        chunk: str = text[start:end].strip() # slice characters from position start to end, not including end and Remove leading/trailing whitespace 
+        if chunk:  # if chunk isn't empty
+            chunks.append(chunk) # Add chunk to the list
         
-        # Move start position (with overlap)
-        start = end - overlap
+        old_start: int = start # Store old position before updating
         
-        # Prevent infinite loop if overlap >= chunk_size
-        if start <= chunks[-1] if chunks else 0:
-            start = end
+        start = end - overlap # Move start forward, minus overlap to create overlap
+        
+        # Safety check, Ensure we don't move backwards
+        if start <= old_start: # only happens when overlap is BIGGER than chunk_size!
+            start = old_start
     
     return chunks
 
@@ -202,11 +204,12 @@ def get_chunk_stats(chunks: List[str]) -> dict:
             "max_length": 0
         }
     
-    lengths = [len(chunk) for chunk in chunks]
+    list = [len(chunk) for chunk in chunks] # store length of each chunk text in a list
+    # eg. chunks = ["Hello world", "This is a test", "im good"] => list = [11, 14, 7]
     
     return {
-        "count": len(chunks),
-        "avg_length": sum(lengths) // len(lengths),
-        "min_length": min(lengths),
-        "max_length": max(lengths)
+        "count": len(chunks), #eg. return: 3
+        "avg_length": sum(list) // len(list), # eg. return: (11 + 14 + 7) // 3 = 32 // 3 = 10, Double slash // = integer division (no decimal)
+        "min_length": min(list), # finds the shortest chunk eg. return: 7
+        "max_length": max(list) # finds the longest chunk eg. return: 14
     }

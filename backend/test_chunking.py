@@ -24,17 +24,18 @@ def test_basic_chunking():
     print(f"Original text length: {len(test_text)} characters")
     
     # Chunk it
-    chunks = chunk_text(test_text, chunk_size=200, overlap=20)
+    chunks_list = chunk_text(test_text, chunk_size=200, overlap=20)
     
-    print(f"Number of chunks created: {len(chunks)}")
+    print(f"Number of chunks created: {len(chunks_list)}")
     
     # Show first 3 chunks
-    for i, chunk in enumerate(chunks[:3]):
-        print(f"\nChunk {i+1} (length: {len(chunk)}):")
-        print(f"'{chunk[:100]}...'")  # First 100 chars
+    for i, chunk in enumerate(chunks_list[:3]):
+        print(f"\nChunk {i+1} (length: {len(chunk)}):") # display index +1 and length of chunck
+        print(f"'{chunk[:100]}...'")  # First 100 chars of the chunk
     
     # Get statistics
-    stats = get_chunk_stats(chunks)
+    # Prints each statistic from the dictionary
+    stats = get_chunk_stats(chunks_list)
     print(f"\nChunk Statistics:")
     print(f"  - Total chunks: {stats['count']}")
     print(f"  - Average length: {stats['avg_length']} chars")
@@ -51,23 +52,23 @@ def test_file_chunking():
     print("="*60)
     
     # Look for any uploaded file in the uploads directory
-    upload_dir = "uploads"
+    upload_dir = "uploads" 
     
-    if not os.path.exists(upload_dir):
+    if not os.path.exists(upload_dir): # Check if the uploads/ folder exists
         print(f"⚠️  Upload directory '{upload_dir}' not found")
         print("   Please make sure you're in the backend/ directory")
         return
     
-    files = os.listdir(upload_dir)
+    files = os.listdir(upload_dir) # Lists all files in a directory. eg. files = ["20251029_154747_test.txt", "20251029_160000_doc.md"]
     
-    if not files:
-        print("⚠️  No files found in uploads/")
+    if not files: 
+        print("⚠️  No files found in uploads/") 
         print("   Upload a file first using POST /upload")
         return
     
     # Use the first file
-    test_file = os.path.join(upload_dir, files[0])
-    print(f"Testing with file: {test_file}")
+    test_file = os.path.join(upload_dir, files[0]) # files[0] - Gets the first filename from the list and os.path.join() - Combines folder and filename properly
+    print(f"Testing with file: {test_file}") # eg. uploads/20251029_154747_test.txt
     
     try:
         # Read the document
@@ -75,16 +76,16 @@ def test_file_chunking():
         print(f"✅ File read successfully: {len(content)} characters")
         
         # Chunk it
-        chunks = chunk_document(test_file, chunk_size=500, overlap=50)
-        print(f"✅ Chunking successful: {len(chunks)} chunks created")
+        chunks_list = chunk_document(test_file, chunk_size=500, overlap=50)
+        print(f"✅ Chunking successful: {len(chunks_list)} chunks created")
         
         # Show first chunk
-        if chunks:
+        if chunks_list:
             print(f"\nFirst chunk preview:")
-            print(f"'{chunks[0][:200]}...'")
+            print(f"'{chunks_list[0][:200]}...'") # Show first 200 characters of the first chunk
         
         # Statistics
-        stats = get_chunk_stats(chunks)
+        stats = get_chunk_stats(chunks_list)
         print(f"\nChunk Statistics:")
         print(f"  - Total chunks: {stats['count']}")
         print(f"  - Average length: {stats['avg_length']} chars")
@@ -107,7 +108,7 @@ def test_edge_cases():
     print("\n1. Empty string:")
     chunks = chunk_text("")
     print(f"   Chunks from empty string: {len(chunks)} (expected: 0)")
-    assert len(chunks) == 0, "Empty string should return 0 chunks"
+    assert len(chunks) == 0, "Empty string should return 0 chunks"  # If chunk count is 0 → ✅ Passed, else crash with error message
     print("   ✅ Passed")
     
     # Test 2: Very short text (shorter than chunk size)
@@ -131,7 +132,7 @@ def test_edge_cases():
     print("\n4. Non-existent file:")
     try:
         chunk_document("nonexistent.txt")
-        print("   ❌ Should have raised FileNotFoundError")
+        print("   ❌ Should have raised FileNotFoundError") # if pass, not good, should have raised error
     except FileNotFoundError:
         print("   ✅ Correctly raised FileNotFoundError")
     
@@ -139,7 +140,7 @@ def test_edge_cases():
     print("\n5. Unsupported file type:")
     try:
         read_document("test.docx")
-        print("   ❌ Should have raised ValueError")
+        print("   ❌ Should have raised ValueError") # if pass, not good, should have raised error
     except ValueError as e:
         print(f"   ✅ Correctly raised ValueError: {e}")
     
@@ -163,11 +164,13 @@ def test_overlap():
     for i in range(min(3, len(chunks))):
         print(f"\nChunk {i+1}: {chunks[i]}")
     
-    # Verify overlap exists between first two chunks
     if len(chunks) >= 2:
-        # The end of chunk 1 should appear at the start of chunk 2
         overlap_found = chunks[0][-5:] in chunks[1][:15]
-        print(f"\n✅ Overlap verified: {overlap_found}")
+        
+        # Use assert to fail the test if no overlap!
+        assert overlap_found, "❌ FAILED: No overlap found between chunks!"
+        
+        print(f"\n✅ Overlap verified: {overlap_found}") #output true if overlap found, else crash with error message
     
     print("\n✅ Overlap test passed!")
 
@@ -191,8 +194,8 @@ def main():
         
     except Exception as e:
         print(f"\n❌ Test suite failed with error: {e}")
-        import traceback
-        traceback.print_exc()
+        import traceback # Only needed if an error happens, a Python module that shows detailed error information
+        traceback.print_exc() # Shows the full "stack trace" (path through the code), exc = "exception" (the error)
 
 
 if __name__ == "__main__":
