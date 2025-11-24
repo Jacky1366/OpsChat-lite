@@ -88,6 +88,88 @@ def compute_similarity(embedding1: list[float], embedding2: list[float]) -> floa
     return float(similarity) # Convert numpy float to regular float, return a single number representing similarity between -1 and 1
     # Returns: 0.95 (very similar!)
 
+def build_rag_prompt(question: str, chunks: list) -> list:
+    """
+    Build a prompt for RAG by combining the question with relevant chunks.
+    
+    Args:
+        question: The user's question
+        chunks: List of relevant chunk dictionaries with 'chunk_text' and 'filename'
+        
+    Returns:
+        list: Messages formatted for OpenAI Chat API
+    """
+    # Build the context from chunks
+    context = ""
+    for i, chunk in enumerate(chunks, 1):
+        context += f"\n--- Chunk {i} (from {chunk['filename']}) ---\n"
+        context += chunk['chunk_text']
+        context += "\n"
+    
+    # System message: Instructions for the AI
+    system_message = """You are a helpful assistant that answers questions based ONLY on the provided document context.
+
+Rules:
+- Answer using ONLY the information in the provided chunks
+- If the answer is not in the chunks, say "I don't have enough information to answer that question based on the available documents."
+- Be concise and accurate
+- When you use information from a chunk, mention which chunk number(s) you used
+- Do not make up information or use external knowledge"""
+
+    # User message: The context + question
+    user_message = f"""Here are relevant document chunks:
+{context}
+
+Based ONLY on the above chunks, please answer this question:
+{question}"""
+
+    # Format for OpenAI API
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_message}
+    ]
+    
+    return messages
+
+
+def get_rag_answer(question: str, chunks: list) -> dict:
+    """
+    Generate an AI answer to a question using RAG (Retrieval Augmented Generation).
+    
+    Args:
+        question: The user's question
+        chunks: List of relevant chunks retrieved by semantic search
+        
+    Returns:
+        dict: Contains 'answer' and 'model' used
+    """
+    try:
+        # Build the prompt
+        messages = build_rag_prompt(question, chunks)
+        
+        # Call OpenAI Chat Completions API
+        response = client.chat.completions.create(
+            model=config.CHAT_MODEL,  # gpt-4o-mini
+            messages=messages,
+            temperature=0.3,  # Lower = more focused, higher = more creative
+            max_tokens=500    # Limit response length
+        )
+        
+        # Extract the answer
+        answer = response.choices[0].message.content
+        
+        return {
+            "answer": answer,
+            "model": config.CHAT_MODEL
+        }
+        
+    except Exception as e:
+        print(f"❌ Error generating RAG answer: {e}")
+        raise
+
+
+
+
 
 # Test the module if run directly
 if __name__ == "__main__":

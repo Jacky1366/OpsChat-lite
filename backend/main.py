@@ -407,6 +407,99 @@ def semantic_search(q: str, k: int = 5):
     except Exception as e:
         print(f"❌ Error during semantic search: {e}")
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+
+# Ask question endpoint
+@app.post("/ask")
+def ask_question(request: dict):
+    """
+    Answer a question using RAG (Retrieval Augmented Generation).
+    
+    Combines semantic search with AI to provide answers based on your documents.
+    
+    Request body:
+        {
+            "question": "Your question here",
+            "k": 5  // Optional: number of chunks to retrieve (default: 5)
+        }
+        
+    Returns:
+        JSON with AI-generated answer and source citations
+    """
+    # Extract parameters
+    question = request.get("question", "").strip()
+    k = request.get("k", 5)
+    
+    # Validation
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required and cannot be empty")
+    
+    if k < 1 or k > 10:
+        raise HTTPException(status_code=400, detail="Parameter 'k' must be between 1 and 10")
+    
+    try:
+        print(f"🤔 Question: '{question}'")
+        
+        # Step 1: RETRIEVAL - Find relevant chunks using semantic search
+        print(f"🔍 Retrieving top {k} relevant chunks...")
+        query_embedding = embeddings.get_embedding(question)
+        all_chunks = database.get_all_chunks_with_embeddings()
+        
+        if len(all_chunks) == 0:
+            return {
+                "question": question,
+                "answer": "No documents have been indexed yet. Please upload and index documents first.",
+                "sources": [],
+                "chunks_used": 0
+            }
+        
+        # Calculate similarities
+        results = []
+        for chunk in all_chunks:
+            similarity = embeddings.compute_similarity(query_embedding, chunk["embedding"])
+            results.append({
+                "chunk_id": chunk["id"],
+                "chunk_text": chunk["chunk_text"],
+                "chunk_index": chunk["chunk_index"],
+                "document_id": chunk["document_id"],
+                "filename": chunk["filename"],
+                "similarity": round(similarity, 4)
+            })
+        
+        # Sort by similarity and get top K
+        results.sort(key=lambda x: x["similarity"], reverse=True)
+        top_chunks = results[:k]
+        
+        print(f"✅ Retrieved {len(top_chunks)} chunks")
+        
+        # Check if chunks are relevant enough (similarity threshold)
+        if top_chunks[0]["similarity"] < 0.3:
+            return {
+                "question": question,
+                "answer": "I couldn't find relevant information about that in the available documents. The question might be outside the scope of the indexed content.",
+                "sources": top_chunks,
+                "chunks_used": 0
+            }
+        
+        # Step 2: GENERATION - Use AI to answer based on retrieved chunks
+        print(f"🤖 Generating AI answer...")
+        rag_response = embeddings.get_rag_answer(question, top_chunks)
+        
+        print(f"✅ Answer generated successfully!")
+        
+        # Step 3: Return response with citations
+        return {
+            "question": question,
+            "answer": rag_response["answer"],
+            "model": rag_response["model"],
+            "sources": top_chunks,
+            "chunks_used": len(top_chunks),
+            "total_chunks_searched": len(all_chunks)
+        }
+        
+    except Exception as e:
+        print(f"❌ Error during RAG: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to answer question: {str(e)}")
     
     
 
