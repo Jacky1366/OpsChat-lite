@@ -180,9 +180,9 @@ def chunk_document(file_path: str, chunk_size: int = 500, overlap: int = 50) -> 
     content = read_document(file_path)
     
     # Step 2: Chunk the content
-    chunks = chunk_text(content, chunk_size=chunk_size, overlap=overlap)
+    chunks_list = chunk_text(content, chunk_size=chunk_size, overlap=overlap)
     
-    return chunks
+    return chunks_list
 
 
 # Optional: Helper function to get chunk statistics
