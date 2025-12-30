@@ -88,6 +88,10 @@ def compute_similarity(embedding1: list[float], embedding2: list[float]) -> floa
     return float(similarity) # Convert numpy float to regular float, return a single number representing similarity between -1 and 1
     # Returns: 0.95 (very similar!)
 
+
+
+
+# Combines your chunks + question into a properly formatted prompt for OpenAI
 def build_rag_prompt(question: str, chunks: list) -> list:
     """
     Build a prompt for RAG by combining the question with relevant chunks.
@@ -106,7 +110,7 @@ def build_rag_prompt(question: str, chunks: list) -> list:
         context += chunk['chunk_text']
         context += "\n"
     
-    # System message: Instructions for the AI
+    # System message: Instructions that guide HOW the AI should behave
     system_message = """You are a helpful assistant that answers questions based ONLY on the provided document context.
 
 Rules:
@@ -116,22 +120,25 @@ Rules:
 - When you use information from a chunk, mention which chunk number(s) you used
 - Do not make up information or use external knowledge"""
 
-    # User message: The context + question
+    # User message: The actual content + question
     user_message = f"""Here are relevant document chunks:
-{context}
+    {context}
 
-Based ONLY on the above chunks, please answer this question:
-{question}"""
+    Based ONLY on the above chunks, please answer this question:
+    {question}"""
 
-    # Format for OpenAI API
+    # Formated RAG prompt for OpenAI API 
     messages = [
-        {"role": "system", "content": system_message},
-        {"role": "user", "content": user_message}
+        {"role": "system", "content": system_message}, # return the first list of dictionaries
+        {"role": "user", "content": user_message} # return the second list of dictionaries
     ]
     
     return messages
 
 
+
+
+# Calls OpenAI's Chat Completions API to generate an answer
 def get_rag_answer(question: str, chunks: list) -> dict:
     """
     Generate an AI answer to a question using RAG (Retrieval Augmented Generation).
@@ -148,7 +155,7 @@ def get_rag_answer(question: str, chunks: list) -> dict:
         messages = build_rag_prompt(question, chunks)
         
         # Call OpenAI Chat Completions API
-        response = client.chat.completions.create(
+        response = client.chat.completions.create(  # client is the OpenAI API key
             model=config.CHAT_MODEL,  # gpt-4o-mini
             messages=messages,
             temperature=0.3,  # Lower = more focused, higher = more creative
@@ -156,7 +163,15 @@ def get_rag_answer(question: str, chunks: list) -> dict:
         )
         
         # Extract the answer
-        answer = response.choices[0].message.content
+        answer = response.choices[0].message.content # answer is a regular Python string
+        """
+        response (big box)
+            └─ choices (list of smaller boxes)
+                └─ [0] (first small box)
+                    └─ message (tiny box)
+                        └─ content (the actual text you want)
+        """
+
         
         return {
             "answer": answer,
