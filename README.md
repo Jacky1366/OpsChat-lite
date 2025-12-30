@@ -1,145 +1,323 @@
-AI-powered document Q&A system for intelligent information retrieval
+# OpsChat-lite
 
-🎯 Project Overview
+**AI-Powered Document Q&A System with Retrieval-Augmented Generation (RAG)**
 
-OpsChat-lite is a full-stack web application that allows users to upload documents, search through them, and ask natural language questions to receive AI-generated answers with citations. Built as a portfolio project to demonstrate modern web development and AI integration skills.
+A full-stack application that enables intelligent document search and question-answering using semantic retrieval and OpenAI's language models. Built as a portfolio project demonstrating practical RAG implementation, backend API development, and AI integration skills.
 
-✨ Key Features (Planned)
+---
 
-📤 Document Upload - Support for TXT, MD, and PDF files
-🔍 Semantic Search - Find relevant content using AI embeddings
-💬 AI-Powered Q&A - Ask questions and get contextual answers with citations
-🎨 Clean Interface - Simple, responsive vanilla JavaScript frontend
-🚀 RESTful API - Well-documented FastAPI backend
-🛠️ Tech Stack
+## 🎯 Project Status: **Phase 2 Complete** ✅
 
-Backend:
+**Working Features:**
+- ✅ Document upload and storage
+- ✅ Intelligent text chunking with overlap
+- ✅ OpenAI embeddings generation and storage
+- ✅ Semantic search using cosine similarity
+- ✅ RAG-based question answering with source citations
+- ✅ FastAPI backend with RESTful endpoints
+- ✅ SQLite database with document and chunk management
 
-Python 3.10+
-FastAPI (async web framework)
-SQLite (document & chunk storage)
-OpenAI API (embeddings & chat)
-Frontend:
+---
 
-HTML5 + CSS3
-Vanilla JavaScript (ES6+)
-Fetch API for backend communication
-Tools & Deployment:
+## 🏗️ Architecture Overview
 
-Docker (containerization)
-pytest (testing)
-GitHub Actions (CI/CD)
-OpsChat Lite
+```
+┌─────────────────┐
+│   Client/User   │
+└────────┬────────┘
+         │ HTTP Requests
+         ▼
+┌─────────────────────────────────────┐
+│      FastAPI Backend                │
+│  ┌─────────────────────────────┐    │
+│  │ Endpoints:                  │    │
+│  │ • POST /upload              │    │
+│  │ • POST /index/{doc_id}      │    │
+│  │ • GET  /search              │    │
+│  │ • POST /chat                │    │
+│  └─────────────────────────────┘    │
+└────────┬───────────────┬────────────┘
+         │               │
+         ▼               ▼
+┌─────────────────┐  ┌──────────────┐
+│  SQLite Database│  │  OpenAI API  │
+│  • documents    │  │  • Embeddings│
+│  • chunks       │  │  • Chat      │
+└─────────────────┘  └──────────────┘
+```
 
-A document question-answering system with AI-powered search and retrieval. Built with Python and FastAPI as a learning project to demonstrate backend development, database integration, and AI API usage.
+## 🔄 RAG Pipeline
 
-Project Status
+1. **Document Upload** → Store document metadata and content
+2. **Chunking** → Split text into overlapping segments (500 chars, 100 char overlap)
+3. **Embedding** → Generate vector embeddings using OpenAI's text-embedding-3-small
+4. **Indexing** → Store chunks and embeddings in SQLite
+5. **Retrieval** → When user asks question:
+   - Generate query embedding
+   - Find top-k similar chunks using cosine similarity
+   - Retrieve relevant context
+6. **Generation** → Send context + question to GPT-4o-mini for answer with citations
 
-🚧 Phase 1 Complete - Foundation with document storage and basic search functionality
+---
 
-This project is actively being developed as part of a structured learning plan. Currently implemented features represent Phase 1 of a 3-phase roadmap.
+## 🛠️ Tech Stack
 
-What It Does
+**Backend:**
+- Python 3.10+
+- FastAPI (async web framework)
+- SQLite (document and chunk storage)
+- OpenAI API (text-embedding-3-small, gpt-4o-mini)
 
-OpsChat Lite allows users to upload documents and ask questions about their content. The system breaks documents into searchable chunks and will eventually use AI to provide intelligent, cited answers.
+**Key Libraries:**
+- `fastapi` - Web framework
+- `openai` - OpenAI API client
+- `sqlite3` - Database operations
+- `uvicorn` - ASGI server
 
-Currently Implemented (Phase 1):
+---
 
-FastAPI backend with RESTful endpoints
-SQLite database for document and chunk storage
-Health check and ping endpoints
-Database initialization and management
-Project structure ready for file upload and indexing features
-Planned Features (Phase 2-3):
+## 🚀 Quick Start
 
-Document upload and text extraction
-Intelligent text chunking
-Embedding-based semantic search
-AI-powered question answering with citations
-React frontend interface
-Technology Stack
+### Prerequisites
+- Python 3.10 or higher
+- OpenAI API key
+- pip (Python package manager)
 
-Backend Framework: FastAPI (Python 3.10+)
-Database: SQLite with plans to migrate to PostgreSQL with pgvector
-API Server: Uvicorn
-Future Integrations: OpenAI API for embeddings and chat
-Why This Project?
+### Installation
 
-This project demonstrates practical full-stack development skills needed for software developer co-op positions:
+1. **Clone the repository**
+```bash
+git clone https://github.com/Jacky1366/OpsChat-lite.git
+cd OpsChat-lite
+```
 
-RESTful API design and implementation
-Database schema design and SQL operations
-Modern Python web development with FastAPI
-AI/ML API integration
-Full-stack application architecture
-📝 Architecture (High-Level)
+2. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
 
-┌─────────────┐
-│   Browser   │
-│  (HTML/JS)  │
-└──────┬──────┘
-       │ HTTP/REST
-       │
-┌──────▼──────────┐
-│  FastAPI Backend│
-│  - /upload      │
-│  - /search      │
-│  - /chat        │
-└──────┬──────────┘
-       │
-┌──────▼──────────┐
-│  SQLite DB      │
-│  - documents    │
-│  - chunks       │
-│  - embeddings   │
-└─────────────────┘
-🚀 Getting Started
+3. **Set up environment variables**
+```bash
+# Create a .env file or set environment variable
+export OPENAI_API_KEY='your-api-key-here'
+```
 
-Setup instructions will be added as development progresses.
+4. **Initialize database**
+```bash
+cd backend
+python database.py  # Creates opschat.db with required tables
+```
 
-Prerequisites
+5. **Run the server**
+```bash
+python main.py
+# Server starts at http://localhost:8000
+```
 
-Python 3.10 or higher
-pip (Python package manager)
-OpenAI API key
-Installation
+---
 
-# Coming soon
-📖 API Documentation
+## 📡 API Endpoints
 
-API endpoints will be documented here as they're implemented.
+### Health Check
+```bash
+GET /ping
+# Returns: {"status": "healthy"}
+```
 
-🧪 Testing
+### Upload Document
+```bash
+POST /upload
+Content-Type: multipart/form-data
 
-Test suite information will be added during development.
+# Upload a text file
+curl -X POST http://localhost:8000/upload \
+  -F "file=@sample.txt"
 
-📦 Project Structure
+# Returns: {"document_id": 1, "filename": "sample.txt"}
+```
 
-doc-chat-ai/
+### Index Document (Generate Embeddings)
+```bash
+POST /index/{doc_id}
+
+# Process and generate embeddings for document
+curl -X POST http://localhost:8000/index/1
+
+# Returns: {
+#   "document_id": 1,
+#   "chunks_created": 15,
+#   "embeddings_generated": 15
+# }
+```
+
+### Semantic Search
+```bash
+GET /search?q={query}&k={num_results}
+
+# Search for relevant chunks
+curl "http://localhost:8000/search?q=machine%20learning&k=3"
+
+# Returns: {
+#   "query": "machine learning",
+#   "results": [
+#     {
+#       "chunk_id": 5,
+#       "document_id": 1,
+#       "text": "...",
+#       "similarity": 0.87
+#     },
+#     ...
+#   ]
+# }
+```
+
+### AI Question Answering (RAG)
+```bash
+POST /chat
+Content-Type: application/json
+
+# Ask a question about uploaded documents
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What are the main benefits of machine learning?",
+    "top_k": 5
+  }'
+
+# Returns: {
+#   "query": "What are the main benefits of machine learning?",
+#   "answer": "Based on the documents, the main benefits include...",
+#   "sources": [
+#     {"chunk_id": 5, "document_id": 1, "similarity": 0.87},
+#     {"chunk_id": 12, "document_id": 1, "similarity": 0.82}
+#   ]
+# }
+```
+
+---
+
+## 🧪 Example Usage
+
+```bash
+# 1. Start the server
+python backend/main.py
+
+# 2. Upload a document
+curl -X POST http://localhost:8000/upload \
+  -F "file=@research_paper.txt"
+# Response: {"document_id": 1, "filename": "research_paper.txt"}
+
+# 3. Index the document (generate embeddings)
+curl -X POST http://localhost:8000/index/1
+# Response: {"document_id": 1, "chunks_created": 42, "embeddings_generated": 42}
+
+# 4. Ask a question
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What methodology was used in the study?", "top_k": 3}'
+# Response: AI-generated answer with source citations
+```
+
+---
+
+## 📂 Project Structure
+
+```
+OpsChat-lite/
 ├── backend/
-│   ├── main.py           # FastAPI app
-│   ├── rag.py           # AI/RAG logic
-│   ├── chunking.py      # Text processing
-│   ├── db.py            # Database helpers
-│   └── requirements.txt
-├── frontend/
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
-├── docs/
-│   ├── PROJECT_OVERVIEW.md
-│   └── ARCHITECTURE.md
-├── tests/
-├── .gitignore
-├── README.md
-└── LICENSE
-🤝 Contributing
+│   ├── main.py              # FastAPI application and endpoints
+│   ├── database.py          # SQLite schema and operations
+│   ├── chunking.py          # Text chunking logic
+│   ├── embeddings.py        # OpenAI embeddings integration
+│   ├── config.py            # Configuration management
+│   ├── test_chunking.py     # Unit tests for chunking
+│   ├── uploads/             # Uploaded document storage
+│   └── requirements.txt     # Python dependencies
+├── README.md                # This file
+├── project_overview.md      # Detailed project plan
+└── .gitignore              # Git ignore rules
+```
 
-This is a personal learning project, but feedback and suggestions are welcome!
+---
 
-🙏 Acknowledgments
+## 🔑 Key Implementation Details
 
-FastAPI documentation and community
-OpenAI API documentation
-Inspiration from modern RAG implementations
-Note: This project is under active development as part of a 10-week learning journey (Oct-Dec 2025). Check back for updates!
+### Text Chunking Strategy
+- **Chunk size:** 500 characters
+- **Overlap:** 100 characters (20%)
+- **Purpose:** Balance between context preservation and retrieval granularity
+
+### Embedding Model
+- **Model:** text-embedding-3-small (OpenAI)
+- **Dimensions:** 1536
+- **Storage:** SQLite BLOB field with JSON serialization
+
+### Retrieval Strategy
+- **Method:** Cosine similarity between query and chunk embeddings
+- **Ranking:** Top-k most similar chunks (default k=5)
+- **Context Window:** Multiple chunks combined for richer context
+
+### Answer Generation
+- **Model:** gpt-4o-mini (OpenAI)
+- **Prompt Engineering:** System prompt instructs model to use only provided context
+- **Citation:** Returns source chunk IDs and similarity scores
+
+---
+
+## 🎓 Learning Outcomes
+
+This project demonstrates practical skills in:
+- **Backend Development:** RESTful API design with FastAPI
+- **Database Design:** SQLite schema for documents, chunks, and embeddings
+- **AI Integration:** OpenAI API usage for embeddings and chat completion
+- **RAG Architecture:** Implementing retrieval-augmented generation pipeline
+- **Vector Search:** Semantic similarity using embeddings and cosine distance
+- **Async Programming:** Python async/await patterns
+- **API Documentation:** Clear endpoint documentation and examples
+
+---
+
+## 🚧 Future Enhancements (Phase 3)
+
+- [ ] Frontend interface (vanilla JavaScript or React)
+- [ ] Support for PDF documents
+- [ ] PostgreSQL with pgvector for production-scale vector search
+- [ ] User authentication and document permissions
+- [ ] Docker containerization
+- [ ] Unit and integration tests
+- [ ] CI/CD pipeline with GitHub Actions
+
+---
+
+## 🤝 Why This Project?
+
+Built as a portfolio project to demonstrate modern software development skills relevant to co-op positions:
+- Full-stack application architecture
+- Modern Python web frameworks (FastAPI)
+- AI/ML integration and practical RAG implementation
+- Database design and query optimization
+- RESTful API best practices
+- Clear documentation and code organization
+
+---
+
+## 📝 License
+
+This project is for educational and portfolio purposes.
+
+---
+
+## 👤 Author
+
+**Jacky Huang**  
+Third-year Bachelor of Technology in Information Technology  
+Kwantlen Polytechnic University
+
+**Contact:**
+- GitHub: [@Jacky1366](https://github.com/Jacky1366)
+- Email: yichi.huang@student.kpu.ca
+- LinkedIn: [linkedin.com/in/jacky-huang-a43420197](https://www.linkedin.com/in/jacky-huang-a43420197)
+
+---
+
+**Note:** This project represents Phase 2 completion of a 3-phase development plan. The backend RAG system is fully functional and demonstrates practical AI/ML application development. Frontend interface (Phase 3) is planned for future implementation.
